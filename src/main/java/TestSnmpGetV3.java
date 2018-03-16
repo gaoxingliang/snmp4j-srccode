@@ -19,6 +19,7 @@ public class TestSnmpGetV3 {
 
     /**
      * Send a snmp get v3 request to request the remote device host name and uptime
+     * You can also add system property - customizeInteger to enable the workaround for integer length check.
      * @param args  [remote device Ip, remote device port, security, authProtocol, authToken, privProtocol, privToken, [ oid1], [oid2] ]
      *
      *              Example: 192.168.170.149 161 testUser md5 testAuth des privPass
@@ -26,6 +27,15 @@ public class TestSnmpGetV3 {
     public static void main(String[] args) throws Exception {
 
         System.setProperty(LogFactory.SNMP4J_LOG_FACTORY_SYSTEM_PROPERTY, DebuggerLogFactory.class.getCanonicalName());
+
+        boolean enableWorkaroundForInteger32 = System.getProperty("customizeInteger", "false").equalsIgnoreCase("true");
+        if (enableWorkaroundForInteger32) {
+            /**
+             * register a special integer 32 parser to avoid the length check
+             */
+            SNMP4JSettings.setExtensibilityEnabled(true);
+            System.setProperty(AbstractVariable.SMISYNTAXES_PROPERTIES, "customizedsmisyntaxes.properties");
+        }
 
         if (args.length < 7) {
             _printUsage();
@@ -141,6 +151,7 @@ public class TestSnmpGetV3 {
     }
 
     private static void _printUsage() {
+        System.out.println("Support -DcustomizeInteger=true to enable our workaround for int > 4 bytes");
         System.out.println("Arguments error. " + TestSnmpGetV3.class.getName() + " [remote device Ip, remote device port, security, authProtocol, authToken, privProtocol, privToken, [oid1], [oid2] ...]");
         System.out.println("security is the user name");
         System.out.println("authProtocol is the authentication protocol, now support MD5 and SHA");
