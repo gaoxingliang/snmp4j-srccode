@@ -109,7 +109,7 @@ public class TestSnmpGetV3 {
         //we can send more than one oid in a single pdu request
         List<OID> oidList = new ArrayList<OID>();
         if (args.length > 7) {
-            for (int i = 3; i < args.length; i++) {
+            for (int i = 7; i < args.length; i++) {
                 OID oid = new OID(args[i]);
                 oidList.add(oid);
             }
