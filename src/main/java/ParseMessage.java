@@ -1,9 +1,11 @@
 import org.snmp4j.MessageDispatcherImpl;
+import org.snmp4j.SNMP4JSettings;
 import org.snmp4j.TransportMapping;
 import org.snmp4j.asn1.BERInputStream;
 import org.snmp4j.log.LogFactory;
 import org.snmp4j.mp.MPv3;
 import org.snmp4j.security.*;
+import org.snmp4j.smi.AbstractVariable;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
@@ -28,6 +30,15 @@ import java.nio.ByteBuffer;
 public class ParseMessage {
     public static void main(String[] args) throws Exception {
         System.setProperty(LogFactory.SNMP4J_LOG_FACTORY_SYSTEM_PROPERTY, DebuggerLogFactory.class.getCanonicalName());
+
+        /**
+         * register a special integer 32 parser to avoid the length check
+         */
+        SNMP4JSettings.setExtensibilityEnabled(true);
+        System.setProperty(AbstractVariable.SMISYNTAXES_PROPERTIES, "customizedsmisyntaxes.properties");
+
+        // ~~~~
+
         MPv3 mpv3 = new MPv3();
         MessageDispatcherImpl messageDispatcher = new MessageDispatcherImpl();
         messageDispatcher.addMessageProcessingModel(mpv3);
