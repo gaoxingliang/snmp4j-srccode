@@ -8,3 +8,6 @@ A helper class to parse Hex message [ParseMessage](src/main/java/ParseMessage.ja
 <br>
 
 Another snmp4j demo code repo is : https://github.com/gaoxingliang/snmp4jdemo
+
+# how to build
+Use the mvn package
