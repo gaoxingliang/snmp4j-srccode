@@ -1,6 +1,7 @@
 
 import org.snmp4j.*;
 import org.snmp4j.event.ResponseEvent;
+import org.snmp4j.event.ResponseListener;
 import org.snmp4j.log.LogFactory;
 import org.snmp4j.mp.MPv3;
 import org.snmp4j.mp.SnmpConstants;
@@ -10,12 +11,14 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * test a snmp get request by using snmp v2c (community version)
  * Created by edward.gao on 07/09/2017.
  */
-public class TestSnmpGetV3 {
+public class TestSnmpGetV3Async {
 
     /**
      * Send a snmp get v3 request to request the remote device host name and uptime
@@ -27,6 +30,7 @@ public class TestSnmpGetV3 {
     public static void main(String[] args) throws Exception {
 
         SNMP4JSettings.setReportSecurityLevelStrategy(SNMP4JSettings.ReportSecurityLevelStrategy.noAuthNoPrivIfNeeded);
+
 
         System.setProperty(LogFactory.SNMP4J_LOG_FACTORY_SYSTEM_PROPERTY, DebuggerLogFactory.class.getCanonicalName());
 
@@ -134,27 +138,39 @@ public class TestSnmpGetV3 {
             pdu.add(new VariableBinding(oid));
         }
 
-
-        ResponseEvent responseEvent = snmp.get(pdu, target);
-        PDU responsePDU = responseEvent.getResponse();
-        if (responsePDU == null) {
-            System.out.println("No response found, maybe community wrong");
-        }
-        else {
-            if (responsePDU.getErrorIndex() != 0) {
-                System.out.println("Error found " + responsePDU);
-            }
-            else {
-                for (VariableBinding vb : responsePDU.getVariableBindings()) {
-                    System.out.println(vb.getOid() + "=" + vb.getVariable());
+        final CountDownLatch latch = new CountDownLatch(1);
+        snmp.send(pdu, target, null, new ResponseListener() {
+            @Override
+            public void onResponse(ResponseEvent responseEvent) {
+                PDU responsePDU = responseEvent.getResponse();
+                if (responsePDU == null) {
+                    System.out.println("No response found, maybe community wrong");
                 }
+                else {
+                    System.out.println("Receive " + responsePDU);
+                    if (responsePDU.getErrorIndex() != 0) {
+                        System.out.println("Error found " + responsePDU);
+                    }
+                    else {
+                        for (VariableBinding vb : responsePDU.getVariableBindings()) {
+                            System.out.println(vb.getOid() + "=" + vb.getVariable());
+                        }
+                    }
+                }
+                latch.countDown();
             }
+        });
+
+        if (!latch.await(20, TimeUnit.SECONDS)) {
+            System.out.println("Not receive any udp messages in 20 seconds");
         }
+
+
     }
 
     private static void _printUsage() {
         System.out.println("Support -DcustomizeInteger=true to enable our workaround for int > 4 bytes");
-        System.out.println("Arguments error. " + TestSnmpGetV3.class.getName() + " [remote device Ip, remote device port, security, authProtocol, authToken, privProtocol, privToken, [oid1], [oid2] ...]");
+        System.out.println("Arguments error. " + TestSnmpGetV3Async.class.getName() + " [remote device Ip, remote device port, security, authProtocol, authToken, privProtocol, privToken, [oid1], [oid2] ...]");
         System.out.println("security is the user name");
         System.out.println("authProtocol is the authentication protocol, now support MD5 and SHA");
         System.out.println("authToken is the authentication passphrase");

@@ -795,6 +795,18 @@ public class USM extends SNMPv3SecurityModel {
             scopedPDU.setFilledBuffer(buf);
           }
           catch (Exception ex) {
+
+
+            // we still need to send a snmp message when the decryption message is wrong
+            CounterEvent event =
+                    new CounterEvent(this, SnmpConstants.usmStatsDecryptionErrors);
+            fireIncrementCounter(event);
+            if (SNMP4JSettings.getReportSecurityLevelStrategy() ==
+                    SNMP4JSettings.ReportSecurityLevelStrategy.noAuthNoPrivIfNeeded) {
+              statusInfo.setSecurityLevel(new Integer32(SecurityLevel.NOAUTH_NOPRIV));
+            }
+            statusInfo.setErrorIndication(new VariableBinding(event.getOid(),
+                    event.getCurrentValue()));
             logger.debug("RFC 3414 §3.2.8 Decryption error: "+ex.getMessage());
             return SnmpConstants.SNMPv3_USM_DECRYPTION_ERROR;
           }
