@@ -13,6 +13,8 @@ import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 
@@ -33,6 +35,7 @@ import java.nio.ByteBuffer;
  */
 public class ParseMessage {
     public static void main(String[] args) throws Exception {
+
         System.setProperty(LogFactory.SNMP4J_LOG_FACTORY_SYSTEM_PROPERTY, DebuggerLogFactory.class.getCanonicalName());
 
         /**
@@ -83,17 +86,23 @@ public class ParseMessage {
         System.out.println("From wireshark:" + messageV3FromSnmp4jLogTransed + " Equals?" + messageV3FromSnmp4jLogTransed.equalsIgnoreCase(messageV3FromSnmp4jLog));
 
         String messageV2 = "3037020101040c6c6f6769636d6f6e69746f72a22402044a0b703002010002010030163014060b2b0601020119020301053a020500ae7ad900";
-        String [] testMessages = new String[]{messageV3FromSnmp4jLog, _wiresharkHexStreamToSplitString(messageV2)};
+        String messageV2FromSnmp4jLog = "30:82:00:43:02:01:01:04:10:79:65:36:52:4e:34:50:6a:63:77:38:7a:57:39:52:51:a2:82:00:2a:02:04:2e:f9:4d:ce:02:01:00:02:01:00:30:82:00:1a:30:82:00:16:06:0d:2b:06:01:04:01:81:a4:4b:02:01:02:07:00:46:82:00:03:01:fe:0c";
+
+        String [] testMessages = new String[]{messageV3FromSnmp4jLog, _wiresharkHexStreamToSplitString(messageV2), messageV2FromSnmp4jLog};
 
         for (String testMessage : testMessages) {
             System.out.println("Test..............................");
-
-            byte[] bytes = OctetString.fromHexString(testMessage, ':').getValue();
-            ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-            BERInputStream in = new BERInputStream(byteBuffer);
-            TransportMapping transportMapping = new DefaultUdpTransportMapping();
-            messageDispatcher.processMessage(transportMapping, addr, in, null);
-
+            try {
+                byte[] bytes = OctetString.fromHexString(testMessage, ':').getValue();
+                ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+                BERInputStream in = new BERInputStream(byteBuffer);
+                TransportMapping transportMapping = new DefaultUdpTransportMapping();
+                messageDispatcher.processMessage(transportMapping, addr, in, null);
+            } catch (Exception e) {
+                StringWriter sw = new StringWriter();
+                e.printStackTrace(new PrintWriter(sw));
+                System.out.println("Error \n" + sw.getBuffer().toString());
+            }
             System.out.println("TestEnd ..............................\n\n");
 
         }
