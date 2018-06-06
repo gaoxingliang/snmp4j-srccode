@@ -1,14 +1,18 @@
-
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.MessageDispatcherImpl;
-import org.snmp4j.PDU;
 import org.snmp4j.Snmp;
-import org.snmp4j.event.ResponseEvent;
 import org.snmp4j.log.LogFactory;
 import org.snmp4j.mp.MPv1;
 import org.snmp4j.mp.SnmpConstants;
-import org.snmp4j.smi.*;
+import org.snmp4j.smi.Address;
+import org.snmp4j.smi.OID;
+import org.snmp4j.smi.OctetString;
+import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * test a snmp get request
@@ -32,6 +36,8 @@ public class TestSnmpGetV1 {
             return;
         }
 
+        boolean onebyone = Boolean.parseBoolean(System.getProperty("onebyone", "false"));
+
         String ip = args[0];
         int port = Integer.valueOf(args[1]);
         String community = args[2];
@@ -49,35 +55,28 @@ public class TestSnmpGetV1 {
         target.setTimeout(5000); // the timeout in mills for one pdu
         target.setVersion(SnmpConstants.version1);
 
-        PDU pdu = new PDU();
+        List<OID> requestOIDs = new ArrayList<OID>();
 
         //we can send more than one oid in a signle pdu request
         if (args.length > 3) {
             for (int i = 3; i < args.length; i++) {
-                pdu.addOID(new VariableBinding(new OID(args[i])));
+                requestOIDs.add(new OID(args[i]));
             }
         }
         else {
-            pdu.addOID(new VariableBinding(Constants.OID_HOSTNAME));
-            pdu.addOID(new VariableBinding(Constants.OID_UPTIME));
+            requestOIDs.add(new OID(Constants.OID_HOSTNAME));
+            requestOIDs.add(new OID(Constants.OID_UPTIME));
+        }
+        if (onebyone) {
+            System.out.println("Request one by one....");
+            for (OID oid : requestOIDs) {
+                TestUtil.sendRequest(snmp, target, Arrays.asList(oid));
+            }
+        }
+        else {
+            TestUtil.sendRequest(snmp, target, requestOIDs);
         }
 
-        ResponseEvent responseEvent = snmp.get(pdu, target);
-        PDU responsePDU = responseEvent.getResponse();
-        if (responsePDU == null) {
-            System.out.println("No response found, maybe community wrong");
-        }
-        else {
-            if (responsePDU.getErrorIndex() != 0) {
-                System.out.println("Error found " + responsePDU);
-            }
-            else {
-                System.out.println("List response ----");
-                for (int i = 0; i < responsePDU.size(); i++) {
-                    System.out.println(String.format("%d=%s", i + 1, responsePDU.get(0).getVariable()));
-                }
-            }
-        }
     }
 
     private static void _printUsage() {
