@@ -30,6 +30,7 @@ public class TestSnmpGetV3 {
 
         System.setProperty(LogFactory.SNMP4J_LOG_FACTORY_SYSTEM_PROPERTY, DebuggerLogFactory.class.getCanonicalName());
 
+
         boolean enableWorkaroundForInteger32 = System.getProperty("customizeInteger", "false").equalsIgnoreCase("true");
         if (enableWorkaroundForInteger32) {
             /**

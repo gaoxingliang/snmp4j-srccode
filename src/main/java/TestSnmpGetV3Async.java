@@ -31,8 +31,11 @@ public class TestSnmpGetV3Async {
 
         SNMP4JSettings.setReportSecurityLevelStrategy(SNMP4JSettings.ReportSecurityLevelStrategy.noAuthNoPrivIfNeeded);
 
-
         System.setProperty(LogFactory.SNMP4J_LOG_FACTORY_SYSTEM_PROPERTY, DebuggerLogFactory.class.getCanonicalName());
+
+        SNMP4JSettings.setTimerFactory(new LMTimerFactory());
+
+
 
         boolean enableWorkaroundForInteger32 = System.getProperty("customizeInteger", "false").equalsIgnoreCase("true");
         if (enableWorkaroundForInteger32) {
@@ -161,8 +164,8 @@ public class TestSnmpGetV3Async {
             }
         });
 
-        if (!latch.await(20, TimeUnit.SECONDS)) {
-            System.out.println("Not receive any udp messages in 20 seconds");
+        if (!latch.await(30, TimeUnit.SECONDS)) {
+            System.out.println("Not receive any udp messages in 30 seconds");
         }
 
 

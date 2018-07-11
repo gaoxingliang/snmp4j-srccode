@@ -58,7 +58,6 @@ public class TestSnmpGetV2 {
         target.setVersion(SnmpConstants.version2c);
 
         List<OID> requestOIDs = new ArrayList<OID>();
-
         //we can send more than one oid in a signle pdu request
         if (args.length > 3) {
             for (int i = 3; i < args.length; i++) {
