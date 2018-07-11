@@ -111,7 +111,7 @@ public class TestSnmpGetV3 {
         Address address = new UdpAddress(String.format("%s/%d", ip, port));
         target.setAddress(address);
         target.setRetries(1); // if possible, retry this request
-        target.setTimeout(5000); // the timeout in mills for one pdu
+        target.setTimeout(Integer.getInteger("pdu", 5) * 1000); // the timeout in mills for one pdu
         target.setVersion(SnmpConstants.version3);
         target.setSecurityLevel(securityLevel);
         target.setSecurityName(new OctetString(security));

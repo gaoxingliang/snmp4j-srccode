@@ -52,7 +52,7 @@ public class TestSnmpGetV1 {
         target.setAddress(address);
         target.setCommunity(new OctetString(community));
         target.setRetries(1); // if possible, retry this request
-        target.setTimeout(5000); // the timeout in mills for one pdu
+        target.setTimeout(Integer.getInteger("pdu", 5) * 1000); // the timeout in mills for one pdu
         target.setVersion(SnmpConstants.version1);
 
         List<OID> requestOIDs = new ArrayList<OID>();
